@@ -8,12 +8,19 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
     },
+    colors: {
+		    navy: '#273043',
+        honey: '#F39237',
+        magenta: '#BF1363',
+        azure: '#0E79B2',
+        parchment: '#FBFFF1',
+        white: '#FFFFFF',
+        grey: '#F2F2F2',
+        black: '#000000',
+        crimson: '#d70015',
+    }
+    
   },
   plugins: [],
 }
