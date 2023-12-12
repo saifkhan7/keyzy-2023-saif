@@ -1,23 +1,24 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react'
 import Slider from '@/app/ui/components/slider'
 import Radio from '@/app/ui/components/radio'    
 
-export default function Page() {
+export default function InputForm({setpropertyData, setFormData}: {setpropertyData?: any, setFormData?: any}) {
     const [inputs, setInputs] = useState({
         url: '',
         discountAskingPrice: 15,
-        desiredYield: 0,
+        desiredYield: 4.5,
         convertedRentRate: 20,
         duration: 3
     });
-
     const [isValidUrl, setIsValidUrl] = useState(true);
     const [isValidDesiredYield, setIsValidDesiredYield] = useState(true);
+    const [fetchingData, setFetchingData] = useState(false);
 
+    // Validators
     function validateDesiredYield(inputDesiredYield: string) {
-        const desiredYieldRegex = /^(4\.5|5(\.0)?|6(\.0)?|7(\.0)?|8(\.0)?|9(\.0)?)$/;
+        const desiredYieldRegex = /^(4\.[5-9]|[5-8](\.\d+)?|9(\.0+)?)$/;
         setIsValidDesiredYield(desiredYieldRegex.test(inputDesiredYield));
     };
 
@@ -26,29 +27,65 @@ export default function Page() {
         setIsValidUrl(urlRegex.test(inputUrl));
     }
 
+    // Setters
     function setdiscountAskingPrice(value: number) {
-        setInputs({...inputs, discountAskingPrice: value});
+        const data = {...inputs, discountAskingPrice: value}
+        setInputs(data)
+        setFormData(data)
     }
 
     function setconvertedRentRate(value: number) {
-        setInputs({...inputs, convertedRentRate: value});
+        const data = {...inputs, convertedRentRate: value}
+        setInputs(data)
+        setFormData(data)
     }
 
     function setDuration(value: number) {
-        setInputs({...inputs, duration: value});
+        const data = {...inputs, duration: value}
+        setInputs(data)
+        setFormData(data)
     }
 
     function handleDesiredYield(value: any) {
-        setInputs({...inputs, desiredYield: value});    
-        validateDesiredYield(value);
+        const data = {...inputs, desiredYield: value}
+        setInputs(data)   
+        validateDesiredYield(value)
+        setFormData(data)
     }
 
     function handleUrlChange(value: string) {
-        setInputs({...inputs, url: value});
-        validateUrl(value);
+        const data = {...inputs, url: value}
+        setInputs(data)
+        validateUrl(value)
+        setFormData(data)
     }
 
-    
+    async function getPropertyListingPrice() {
+        try {
+            if (!isValidUrl) {
+                return
+            }
+
+            setFetchingData(true)
+            const response = await fetch('api/property-data', {
+                method: 'POST',
+                body: JSON.stringify(inputs)
+            });
+
+            const data = await response.json()
+            if (data.status == 'error') {
+                setFetchingData(false)
+                setIsValidUrl(false)
+                return
+            }
+            setpropertyData(data.data)
+            setFetchingData(false)
+          } 
+          catch (error) {
+            setFetchingData(false)
+            setIsValidUrl(false)
+          }
+    }
 
     return (
         <div className="md:px-10">
@@ -61,10 +98,12 @@ export default function Page() {
                         <input 
                             className="flex-1 text-white bg-azure border-2 border-black p-2" 
                             type="text" 
-                            onChange = {(e) => handleUrlChange(e.target.value)}
+                            onChange={(e) => handleUrlChange(e.target.value)}
+                            onBlur = {(e) => getPropertyListingPrice()}
                         />
                     </div>
-                    {!isValidUrl && <div className="flex justify-center items-center mt-4 text-crimson">Please enter a valid URL.</div>}
+                    {(!isValidUrl) && <div className="flex justify-center items-center mt-4 text-crimson">The URL doesn't seems to be correct</div>}
+                    {fetchingData && <div className="flex justify-center items-center mt-4 text-crimson">Fetching data...</div>}
                 </div>
                 
                 {/* Discount vs. asking price */}
@@ -82,8 +121,7 @@ export default function Page() {
                 {/* Desired Yield */}
                 <div>
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
-                        
-                            <div className="md:w-1/6">Desired Yield:</div>
+                        <div className="md:w-1/6">Desired Yield:</div>
                             <div className="flex-1">
                                 <input 
                                     type="number"
@@ -92,6 +130,7 @@ export default function Page() {
                                     max="9"
                                     step="0.1"
                                     onChange = {(e) => (handleDesiredYield(e.target.value))}
+                                    value={inputs.desiredYield}
                                 />
                             </div>
                         </div>
